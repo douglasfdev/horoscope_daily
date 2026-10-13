@@ -1,0 +1,56 @@
+{
+  "name": "daily-sorte-astroengine",
+  "version": "1.0.0",
+  "description": "Micro SaaS de astrologia e sorte do dia - Local Libraries Edition",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "astrology",
+    "saaS",
+    "horoscope",
+    "fastify",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/rate-limit": "^10.0.0",
+    "@fusionstrings/swiss-eph": "^0.1.1",
+    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.48.0",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.48.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.48.0",
+    "@opentelemetry/resources": "^1.21.0",
+    "@opentelemetry/sdk-node": "^0.48.0",
+    "@opentelemetry/semantic-conventions": "^1.25.0",
+    "inversify": "^8.2.3",
+    "bull": "^4.12.0",
+    "fastify": "^5.0.0",
+    "horoscopefree": "github:vitorebatista/horoscopefree",
+    "ioredis": "^5.3.2",
+    "mongodb": "^6.3.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "eslint": "^8.56.0",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+.env
+.env.local
+.env.*.local
+cache/
+data/
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+*.test.ts
+*.spec.ts
