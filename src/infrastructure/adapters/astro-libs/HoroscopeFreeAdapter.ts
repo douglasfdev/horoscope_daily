@@ -1,4 +1,4 @@
-import { getHoroscope, HoroscopeError } from 'horoscopefree';
+import { getHoroscope, HoroscopeError, ZodiacSign, Language } from 'horoscopefree';
 import { HoroscopeEnginePort } from '../../../application/ports/astro-port';
 import { HoroscopeEntity } from '../../../domain/entities/HoroscopeEntity';
 import { Sign } from '../../../domain/value-objects/Sign';
@@ -17,8 +17,7 @@ export class HoroscopeFreeAdapter implements HoroscopeEnginePort {
     }
 
     try {
-      const normalizedSignStr = normalizedSign.toString();
-      const result = await getHoroscope(normalizedSignStr, date, lang);
+      const result = await getHoroscope(normalizedSign.value as ZodiacSign, date, lang as Language);
 
       const luckyNumbers: Record<string, number> = {
         'aries': 9, 'taurus': 6, 'gemini': 5, 'cancer': 2,
@@ -31,15 +30,15 @@ export class HoroscopeFreeAdapter implements HoroscopeEnginePort {
         'sagittarius': 'roxo', 'capricorn': 'branco', 'aquarius': 'ciano', 'pisces': 'azul'
       };
 
-      const compatibility = this.getCompatibilitySigns(normalizedSignStr);
+      const compatibility = this.getCompatibilitySigns(normalizedSign.value);
 
       return {
-        sign: normalizedSignStr,
+        sign: normalizedSign.value,
         language: lang,
         date,
         prediction: result.text,
-        luckyNumber: luckyNumbers[normalizedSignStr] || 1,
-        color: colors[normalizedSignStr] || 'cinza',
+        luckyNumber: luckyNumbers[normalizedSign.value] || 1,
+        color: colors[normalizedSign.value] || 'cinza',
         compatibility,
         generatedAt: new Date(),
         ...(result.cached !== undefined && { cached: result.cached })

@@ -2,8 +2,7 @@ import { AstroCalculationPort } from '../../../application/ports/astro-calculati
 import { NatalChartEntity } from '../../../domain/entities/NatalChartEntity';
 import { Coordinate } from '../../../domain/value-objects/Coordinate';
 import { inject, injectable } from 'inversify';
-import { TYPES } from '../../../application/di/types';
-import { swe_calc, swe_houses, swe_julday, SE_SUN, SE_MOON, SE_MERCURY, SE_VENUS, SE_MARS, SE_JUPITER, SE_SATURN, SE_URANUS, NEPTUNE, PLUTO } from '@fusionstrings/swiss-eph';
+import eph, { Constants, load } from '@fusionstrings/swiss-eph';
 import { Location } from '../../../domain/value-objects/location';
 
 @injectable()
@@ -21,29 +20,32 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
   ): Promise<NatalChartEntity> {
     const coordinate = Coordinate.create(latitude, longitude);
 
-    const birthDateObj = typeof birthDate === 'object' && birthDate instanceof Date ? birthDate : new Date(birthDate);
-    let birthTimeStr = typeof birthTime === 'object' && birthTime instanceof Date ? birthTime.toTimeString().split(' ')[0] : String(birthTime).trim();
+    const birthDateObj = birthDate instanceof Date ? birthDate : new Date(birthDate);
+    let birthTimeStr = birthTime instanceof Date ? birthTime.toTimeString().split(' ')[0] : String(birthTime).trim();
     const birthTimeObj = new Date(`1970-01-01T${birthTimeStr}`);
 
-    const julday = swe_julday(
+    const eph = await load();
+
+    const julday = eph.swe_julday(
       birthDateObj.getFullYear(),
       birthDateObj.getMonth() + 1,
       birthDateObj.getDate() + (birthTimeObj.getHours() + birthTimeObj.getMinutes() / 60) / 24,
-      birthTimeObj.getTimezoneOffset()
+      birthTimeObj.getTimezoneOffset(),
+      Constants.SE_GREG_CAL
     );
 
-    const sunPos = swe_calc(julday, SE_SUN, ' tropical')[0];
-    const moonPos = swe_calc(julday, SE_MOON, ' tropical')[0];
-    const mercuryPos = swe_calc(julday, SE_MERCURY, ' tropical')[0];
-    const venusPos = swe_calc(julday, SE_VENUS, ' tropical')[0];
-    const marsPos = swe_calc(julday, SE_MARS, ' tropical')[0];
-    const jupiterPos = swe_calc(julday, SE_JUPITER, ' tropical')[0];
-    const saturnPos = swe_calc(julday, SE_SATURN, ' tropical')[0];
-    const uranusPos = swe_calc(julday, SE_URANUS, ' tropical')[0];
-    const neptunePos = swe_calc(julday, NEPTUNE, ' tropical')[0];
-    const plutoPos = swe_calc(julday, PLUTO, ' tropical')[0];
+    const sunPos = eph.swe_calc_ut(julday, Constants.SE_SUN, Constants.SEFLG_SPEED);
+    const moonPos = eph.swe_calc_ut(julday, Constants.SE_MOON, Constants.SEFLG_SPEED);
+    const mercuryPos = eph.swe_calc_ut(julday, Constants.SE_MERCURY, Constants.SEFLG_SPEED);
+    const venusPos = eph.swe_calc_ut(julday, Constants.SE_VENUS, Constants.SEFLG_SPEED);
+    const marsPos = eph.swe_calc_ut(julday, Constants.SE_MARS, Constants.SEFLG_SPEED);
+    const jupiterPos = eph.swe_calc_ut(julday, Constants.SE_JUPITER, Constants.SEFLG_SPEED);
+    const saturnPos = eph.swe_calc_ut(julday, Constants.SE_SATURN, Constants.SEFLG_SPEED);
+    const uranusPos = eph.swe_calc_ut(julday, Constants.SE_URANUS, Constants.SEFLG_SPEED);
+    const neptunePos = eph.swe_calc_ut(julday, Constants.SE_NEPTUNE, Constants.SEFLG_SPEED);
+    const plutoPos = eph.swe_calc_ut(julday, Constants.SE_PLUTO, Constants.SEFLG_SPEED);
 
-    const houses = swe_houses(julday, latitude, longitude, 'P');
+    const housesData = eph.swe_houses(julday, latitude, longitude, 'P'.charCodeAt(0));
 
     const signs = [
       'Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem',
@@ -56,20 +58,20 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
     };
 
     const planetPositions = new Map([
-      ['sol', longitudeToSign(sunPos.lon)],
-      ['luna', longitudeToSign(moonPos.lon)],
-      ['mercurio', longitudeToSign(mercuryPos.lon)],
-      ['venus', longitudeToSign(venusPos.lon)],
-      ['marte', longitudeToSign(marsPos.lon)],
-      ['jupiter', longitudeToSign(jupiterPos.lon)],
-      ['saturno', longitudeToSign(saturnPos.lon)],
-      ['urano', longitudeToSign(uranusPos.lon)],
-      ['netuno', longitudeToSign(neptunePos.lon)],
-      ['plutao', longitudeToSign(plutoPos.lon)],
+      ['sol', longitudeToSign(Number(sunPos.xx[0]))],
+      ['luna', longitudeToSign(Number(moonPos.xx[0]))],
+      ['mercurio', longitudeToSign(Number(mercuryPos.xx[0]))],
+      ['venus', longitudeToSign(Number(venusPos.xx[0]))],
+      ['marte', longitudeToSign(Number(marsPos.xx[0]))],
+      ['jupiter', longitudeToSign(Number(jupiterPos.xx[0]))],
+      ['saturno', longitudeToSign(Number(saturnPos.xx[0]))],
+      ['urano', longitudeToSign(Number(uranusPos.xx[0]))],
+      ['netuno', longitudeToSign(Number(neptunePos.xx[0]))],
+      ['plutao', longitudeToSign(Number(plutoPos.xx[0]))],
     ]);
 
-    const ascendant = houses[0];
-    const mc = houses[3];
+    const ascendant = housesData.cusps[0];
+    const mc = housesData.ascmc[3];
     const ascSign = longitudeToSign(ascendant);
     const mcSign = longitudeToSign(mc);
 
@@ -80,7 +82,7 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
       latitude: coordinate.latitude,
       longitude: coordinate.longitude,
       timezone,
-      houses: houses.map((h: number) => Math.round(h)),
+      houses: Array.from({ length: 12 }, (_, i) => Math.round(housesData.cusps[i + 1])),
       planetPositions,
       ascendant: ascSign,
       midheaven: mcSign,
@@ -91,11 +93,15 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
   async getCurrentPlanetPositions(date?: string | Date): Promise<Map<string, string>> {
     const targetDate = date || new Date();
     const targetDateObj = targetDate instanceof Date ? targetDate : new Date(targetDate);
-    const julday = swe_julday(
+
+    const eph = await load();
+
+    const julday = eph.swe_julday(
       targetDateObj.getFullYear(),
       targetDateObj.getMonth() + 1,
       targetDateObj.getDate(),
-      targetDateObj.getTimezoneOffset()
+      targetDateObj.getTimezoneOffset(),
+      Constants.SE_GREG_CAL
     );
 
     const signs = [
@@ -104,16 +110,16 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
     ];
 
     const planetPositions = new Map([
-      ['sol', this.signFromLongitude(swe_calc(julday, SE_SUN, ' tropical')[0].lon, signs)],
-      ['luna', this.signFromLongitude(swe_calc(julday, SE_MOON, ' tropical')[0].lon, signs)],
-      ['mercurio', this.signFromLongitude(swe_calc(julday, SE_MERCURY, ' tropical')[0].lon, signs)],
-      ['venus', this.signFromLongitude(swe_calc(julday, SE_VENUS, ' tropical')[0].lon, signs)],
-      ['marte', this.signFromLongitude(swe_calc(julday, SE_MARS, ' tropical')[0].lon, signs)],
-      ['jupiter', this.signFromLongitude(swe_calc(julday, SE_JUPITER, ' tropical')[0].lon, signs)],
-      ['saturno', this.signFromLongitude(swe_calc(julday, SE_SATURN, ' tropical')[0].lon, signs)],
-      ['urano', this.signFromLongitude(swe_calc(julday, SE_URANUS, ' tropical')[0].lon, signs)],
-      ['netuno', this.signFromLongitude(swe_calc(julday, NEPTUNE, ' tropical')[0].lon, signs)],
-      ['plutao', this.signFromLongitude(swe_calc(julday, PLUTO, ' tropical')[0].lon, signs)],
+      ['sol', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_SUN, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['luna', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_MOON, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['mercurio', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_MERCURY, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['venus', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_VENUS, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['marte', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_MARS, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['jupiter', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_JUPITER, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['saturno', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_SATURN, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['urano', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_URANUS, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['netuno', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_NEPTUNE, Constants.SEFLG_SPEED).xx[0]), signs)],
+      ['plutao', this.signFromLongitude(Number(eph.swe_calc_ut(julday, Constants.SE_PLUTO, Constants.SEFLG_SPEED).xx[0]), signs)],
     ]);
 
     return planetPositions;
