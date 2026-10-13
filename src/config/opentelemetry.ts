@@ -1,7 +1,8 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { diag, DiagConsoleLogger, DiagLogger, getNodeAutoInstrumentations } from '@opentelemetry/api';
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
-diag.setLogger(new DiagConsoleLogger(), DiagLogger.NONE);
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.NONE);
 
 export async function setupInstrumentation(fastify: any, config: any) {
   const sdk = new NodeSDK({
@@ -9,19 +10,19 @@ export async function setupInstrumentation(fastify: any, config: any) {
       url: config.otelExporterEndpoint,
     }),
     instrumentations: [getNodeAutoInstrumentations({
-      enabledInterceptors: ['fetch', 'http'],
+      '@opentelemetry/instrumentation-fs': { enabled: false },
     })],
   });
 
-  await sdk.start().then(() => {
+  try {
+    await sdk.start();
     diag.info('OpenTelemetry SDK started');
-  }).catch((err) => {
+  } catch (err: any) {
     diag.error(`Failed to start OpenTelemetry SDK: ${err}`);
-  });
+  }
 
-  fastify.addHook('onClose', async (instance: any, next: any) => {
+  fastify.addHook('onClose', async () => {
     await sdk.shutdown();
     diag.info('OpenTelemetry SDK shutdown');
-    next();
   });
 }

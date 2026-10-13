@@ -1,4 +1,4 @@
-import { diag, DiagConsoleLogger, DiagSeverity } from '@opentelemetry/api';
+import { diag, DiagConsoleLogger, DiagSeverity, DiagLogger } from '@opentelemetry/api';
 import { NodeTracerProvider } from '@opentelemetry/tracing';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';

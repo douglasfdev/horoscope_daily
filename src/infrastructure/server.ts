@@ -1,9 +1,11 @@
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
-import { loadConfig } from './config';
-import { setupInstrumentation } from './config/opentelemetry';
-import { routes } from './infrastructure/http/routes';
-import { TYPES } from './application/di/types';
+import { loadConfig } from '../config';
+import { setupInstrumentation } from '../config/opentelemetry';
+import { routes } from '../infrastructure/http/routes';
+import { TYPES } from '../application/di/types';
+import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter';
+import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter';
 
 async function bootstrap() {
   console.log('🚀 Starting Daily Sorte & AstroEngine...');
@@ -15,10 +17,13 @@ async function bootstrap() {
 
   await setupInstrumentation(fastify, config);
 
-  await fp(fastify, async (instance: any) => {
+  const horoscopeAdapter = new HoroscopeFreeAdapter();
+  const astroAdapter = new AstrolinkEngineAdapter();
+
+  await fp(async (instance: any) => {
     await routes(instance, {
-      getDailyHoroscopeUseCase: new (await import('./application/use-cases/get-daily-horoscope.use-case')).GetDailyHoroscopeUseCase,
-      generateNatalChartUseCase: new (await import('./application/use-cases/generate-advanced-natal-chart.use-case')).GenerateAdvancedNatalChartUseCase,
+      getDailyHoroscopeUseCase: new (await import('../application/use-cases/get-daily-horoscope.use-case')).GetDailyHoroscopeUseCase(horoscopeAdapter),
+      generateNatalChartUseCase: new (await import('../application/use-cases/generate-advanced-natal-chart.use-case')).GenerateAdvancedNatalChartUseCase(astroAdapter),
     });
   });
 

@@ -25,7 +25,7 @@
     "@fastify/helmet": "^11.1.1",
     "@fastify/rate-limit": "^10.0.0",
     "@fusionstrings/swiss-eph": "^0.1.1",
-    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.48.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.48.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.48.0",
