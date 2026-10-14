@@ -1,1 +1,1 @@
-export { } from '../config';
+export { initRedis, getRedis, closeRedis } from './redis-cache';

@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
+import { initRedis, closeRedis } from '../infrastructure/messaging';
 import { loadConfig } from '../config';
 import { setupInstrumentation } from '../config/opentelemetry';
 import { routes } from '../infrastructure/http/routes';
@@ -17,10 +18,12 @@ async function bootstrap() {
 
   await setupInstrumentation(fastify, config);
 
+  initRedis();
+
   const horoscopeAdapter = new HoroscopeFreeAdapter();
   const astroAdapter = new AstrolinkEngineAdapter();
 
-  await fp(async (instance: any) => {
+  fp(async (instance: any) => {
     await routes(instance, {
       getDailyHoroscopeUseCase: new (await import('../application/use-cases/get-daily-horoscope.use-case')).GetDailyHoroscopeUseCase(horoscopeAdapter),
       generateNatalChartUseCase: new (await import('../application/use-cases/generate-advanced-natal-chart.use-case')).GenerateAdvancedNatalChartUseCase(astroAdapter),
@@ -32,6 +35,7 @@ async function bootstrap() {
 
   process.on('SIGINT', async () => {
     await fastify.close();
+    await closeRedis();
     process.exit(0);
   });
 }
