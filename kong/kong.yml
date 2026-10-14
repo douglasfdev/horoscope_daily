@@ -11,9 +11,9 @@ ugins:
 
 plugins:
   keycloak:
-    client_id: daily-sorte-frontend
+    client_id: frontend
     client_secret: keycloak-client-secret
-    issuer: http://keycloak:8080/auth/realms/master/realm
+    issuer: https://x.supabase.co/auth/realms/daily-sorte
     logout:
       default_url: http://localhost:8080/auth/logout
 

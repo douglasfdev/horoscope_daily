@@ -1,0 +1,158 @@
+Preciso que você monte um CI/CD para mim semelhante a esse, com intuito de hospedar a solução na VPS da Oracle:
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: Production
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Nome fixo da imagem — evita problemas com caracteres inválidos do repo name
+      - name: Normalize image name
+        id: image
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/bomberman"
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          echo "name=${IMAGE}" >> $GITHUB_OUTPUT
+          echo "Normalized image name: ${IMAGE}"
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      # Cache de layers do Docker para builds mais rápidos
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          # Passa apenas as variáveis necessárias para o build Angular
+          build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+            DIRECT_URL=${{ secrets.DIRECT_URL || vars.DIRECT_URL }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID || vars.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET || vars.GOOGLE_CLIENT_SECRET }}
+            APP_BASE_URL=${{ secrets.APP_BASE_URL || vars.APP_BASE_URL }}
+            SESSION_SECRET=${{ secrets.SESSION_SECRET || vars.SESSION_SECRET }}
+          # Cache entre runs para acelerar builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Production
+    needs: build-and-push
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL || vars.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL || vars.APP_BASE_URL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET || vars.SESSION_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID || vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET || vars.GOOGLE_CLIENT_SECRET }}
+          WOOVI_API_KEY: ${{ secrets.WOOVI_API_KEY || vars.WOOVI_API_KEY }}
+          WOOVI_API_BASE_URL: ${{ secrets.WOOVI_API_BASE_URL || vars.WOOVI_API_BASE_URL }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Nome normalizado igual ao usado no build
+          IMAGE_NAME: ${{ needs.build-and-push.outputs.image_tag }}
+        with:
+          host: ${{ secrets.VPS_HOST || vars.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME || vars.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY || vars.VPS_SSH_KEY }}
+          command_timeout: 5m
+          envs: DIRECT_URL,DATABASE_URL,APP_BASE_URL,SESSION_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,WOOVI_API_KEY,WOOVI_API_BASE_URL,GITHUB_ACTOR,GITHUB_TOKEN,IMAGE_NAME
+          script: |
+            set -e
+
+            sudo mkdir -p /var/www/bomberman
+            sudo chown -R $USER:$USER /var/www/bomberman
+            cd /var/www/bomberman
+
+            # Extrai só a tag :latest da lista de tags (pode vir múltiplas)
+            FULL_IMAGE=$(echo "$IMAGE_NAME" | tr ',' '\n' | grep ':latest')
+
+            # Grava o .env
+            printf 'NODE_ENV=production\n'                       > .env
+            printf 'PORT=4000\n'                                >> .env
+            printf 'DIRECT_URL=%s\n'           "$DIRECT_URL"   >> .env
+            printf 'DATABASE_URL=%s\n'         "$DATABASE_URL" >> .env
+            printf 'APP_BASE_URL=%s\n'         "$APP_BASE_URL" >> .env
+            printf 'SESSION_SECRET=%s\n'       "$SESSION_SECRET" >> .env
+            printf 'GOOGLE_CLIENT_ID=%s\n'     "$GOOGLE_CLIENT_ID" >> .env
+            printf 'GOOGLE_CLIENT_SECRET=%s\n' "$GOOGLE_CLIENT_SECRET" >> .env
+            printf 'WOOVI_API_KEY=%s\n'        "$WOOVI_API_KEY" >> .env
+            printf 'WOOVI_API_BASE_URL=%s\n'   "$WOOVI_API_BASE_URL" >> .env
+
+            # Grava docker-compose.yml usando a imagem correta
+            cat > docker-compose.yml << COMPOSE
+            services:
+              app:
+                image: ${FULL_IMAGE}
+                container_name: bomberman
+                restart: unless-stopped
+                ports:
+                  - "4000:4000"
+                env_file:
+                  - .env
+                environment:
+                  NODE_ENV: production
+                  PORT: "4000"
+                healthcheck:
+                  test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/user"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 15s
+            COMPOSE
+
+            # Login no GHCR
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+            # Pull e recria o container
+            docker pull "${FULL_IMAGE}"
+            docker compose down --remove-orphans 2>/dev/null || true
+            docker compose up -d
+
+            # Limpa imagens antigas
+            docker image prune -f
+
+            echo "✅ Deploy concluído."
+            docker compose ps

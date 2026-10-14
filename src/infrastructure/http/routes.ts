@@ -1,7 +1,7 @@
 import { FastifyInstance, RouteOptions } from 'fastify';
-import { GetDailyHoroscopeUseCase } from '../../application/use-cases/get-daily-horoscope.use-case';
-import { GenerateAdvancedNatalChartUseCase } from '../../application/use-cases/generate-advanced-natal-chart.use-case';
-import { Sign } from '../../domain/value-objects/Sign';
+import { GetDailyHoroscopeUseCase } from '../../application/use-cases/get-daily-horoscope.use-case.js';
+import { GenerateAdvancedNatalChartUseCase } from '../../application/use-cases/generate-advanced-natal-chart.use-case.js';
+import { Sign } from '../../domain/value-objects/Sign.js';
 
 export async function routes(fastify: FastifyInstance, useCases: {
   getDailyHoroscopeUseCase: GetDailyHoroscopeUseCase;
@@ -33,6 +33,13 @@ export async function routes(fastify: FastifyInstance, useCases: {
               color: { type: 'string' },
               compatibility: { type: 'array', items: { type: 'string' } },
               generatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
             },
           },
         },
@@ -88,6 +95,13 @@ export async function routes(fastify: FastifyInstance, useCases: {
               message: { type: 'string' },
               chartId: { type: 'string' },
               generatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
             },
           },
         },

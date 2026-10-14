@@ -1,13 +1,11 @@
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
-import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging/index.js';
 import { loadConfig } from '../config/index.js';
 import { setupInstrumentation } from '../config/opentelemetry.js';
-import { routes } from './http/routes.js';
-import { TYPES } from '../application/di/types.js';
-import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter.js';
 import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter.js';
-import { Profile, supabase } from './database/models/profile.model.js';
+import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter.js';
+import { closeRedis, initRedis } from '../infrastructure/messaging/index.js';
+import { routes } from './http/routes.js';
 
 let redisClient: import('ioredis').Redis;
 

@@ -1,7 +1,7 @@
-import { Sign } from '../../domain/value-objects/Sign';
-import { DateTimeVO } from '../../domain/value-objects/DateTimeVO';
-import { HoroscopeEntity } from '../../domain/entities/HoroscopeEntity';
-import { NatalChartEntity } from '../../domain/entities/NatalChartEntity';
+import { Sign } from '../../domain/value-objects/Sign.js';
+import { DateTimeVO } from '../../domain/value-objects/DateTimeVO.js';
+import { HoroscopeEntity } from '../../domain/entities/HoroscopeEntity.js';
+import { NatalChartEntity } from '../../domain/entities/NatalChartEntity.js';
 
 export interface HoroscopeEnginePort {
   fetchHoroscope(sign: string, date: string, lang: string): Promise<HoroscopeEntity>;

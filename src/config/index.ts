@@ -8,6 +8,11 @@ export interface IConfig {
   rabbitMqUrl: string;
   otelExporterEndpoint: string;
   serviceName: string;
+  keycloakIssuer: string;
+  keycloakClientId: string;
+  keycloakClientSecret: string;
+  upstashRestUrl: string;
+  upstashRestToken: string;
 }
 
 const {
@@ -20,7 +25,12 @@ const {
   REDIS_PASSWORD,
   RABBITMQ_URL,
   OTEL_EXPORTER_OTLP_ENDPOINT,
-  OTEL_SERVICE_NAME
+  OTEL_SERVICE_NAME,
+  KEYCLOAK_ISSUER,
+  KEYCLOAK_CLIENT_ID,
+  KEYCLOAK_CLIENT_SECRET,
+  UPSTASH_REDIS_REST_URL,
+  UPSTASH_REDIS_REST_TOKEN
 } = process.env;
 
 export function loadConfig(): IConfig {
@@ -34,5 +44,10 @@ export function loadConfig(): IConfig {
     rabbitMqUrl: RABBITMQ_URL || 'amqp://localhost:5672',
     otelExporterEndpoint: OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
     serviceName: OTEL_SERVICE_NAME || 'daily-sorte-astroengine',
+    keycloakIssuer: KEYCLOAK_ISSUER || 'https://x.supabase.co/auth',
+    keycloakClientId: KEYCLOAK_CLIENT_ID || 'frontend',
+    keycloakClientSecret: KEYCLOAK_CLIENT_SECRET || 'sb_secret_US_x-',
+    upstashRestUrl: UPSTASH_REDIS_REST_URL || 'https://valid-moose-232668.upstash.io',
+    upstashRestToken: UPSTASH_REDIS_REST_TOKEN || 'gQAAAAAAA4zcAAIgcDIxMDdjZjBmNmEzNTk0MTEyOWE5NmFjNjVjYjY2NTdlZg',
   };
 }
