@@ -1,10 +1,10 @@
-# Especificificação de Implementação: MongoDB, Autentificação e Notificação
+# Especificificação de Implementação: Supabase, Autentificação e Notificação
 
 ## Visão Geral
 
 Este documento descreve a implementação de:
 1. **Autenticação** via Keycloak/Kong (OAuth2/OIDC)
-2. **Armazenamento** de eventos no MongoDB
+2. **Armazenamento** de eventos no PostgreSQL (Supabase)
 3. **Notificação** via e-mail e WhatsApp
 
 O objetivo é disparar e-mails ou WhatsApp aos usuários com seu horóscopo do dia, sem senhas serem armazenadas no banco da aplicação.
@@ -16,7 +16,7 @@ O objetivo é disparar e-mails ou WhatsApp aos usuários com seu horóscopo do d
 ### 1.1 Fllow de Autenticação
 
 ```
-Cliente → Keycloak (OIDC) → JWT Token → Aplicação → MongoDB → Notificação
+Cliente → Keycloak (OIDC) → JWT Token → Aplicação → PostgreSQL (Supabase) → Notificação
 ```
 
 ### 1.2 Configuração Keycloak
@@ -570,14 +570,16 @@ fastify.get('/perfil', async (request, reply) => {
 # docker-compose.yml
 version: '3.8'
 services:
-  mongo:
-    image: mongo:5-alpine
-    ports: ['27017:27017']
-    volumes:
-      - mongo_data:/data/db
+  postgres:
+    image: postgres:15
+    container_name: daily-sorte-postgres
+    ports: ['5432:5432']
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: pass
+      POSTGRES_DB: daily-sorte-astro
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
@@ -591,9 +593,10 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - MONGO_URI=mongodb://admin:pass@mongo:27017/daily-sorte-astro
+      - POSTGRES_URL=postgres://admin:admin123@postgres:5432/daily-sorte-astro
       - JWT_SECRET=chave-super-segura
       - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
       - SMTP_USER=user@gmail.com
       - SMTP_PASS=senha-do-smtp
       - TWilio_ACCOUNT_SID=conta-twilio
@@ -614,7 +617,7 @@ JWT_SECRET=chave-super-segura-muito-longa-e-complexa
 
 # Conexões
 REDIS_URI=rediss://:valid-moose-232668@valid-moose-232668.upstash.io:6379
-MONGODB_URI=mongodb://admin:pass@mongo:27017/daily-sorte-astro
+POSTGRES_URL=postgres://admin:admin123@postgres:5432/daily-sorte-astro
 
 # Autentificação
 KEYCLOAK_ISSUER=https://keycloak.dominio.com/auth
@@ -625,6 +628,7 @@ KEYCLOAK_CLIENT_SECRET=client-secret-do-keycloak
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=user@gmail.com
+```
 SMTP_PASS=senha-do-smtp
 SMTP_FROM=no-reply@daily-sorte.com
 

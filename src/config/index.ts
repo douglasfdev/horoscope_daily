@@ -14,9 +14,10 @@ const {
   NODE_ENV,
   PORT,
   SUPABASE_URL,
-  SUPABASE_ANON_KEY,
+  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_ANON_KEY: SUPABASE_SECRET_KEY,
   REDIS_URI,
-  
+  REDIS_PASSWORD,
   RABBITMQ_URL,
   OTEL_EXPORTER_OTLP_ENDPOINT,
   OTEL_SERVICE_NAME
@@ -26,10 +27,10 @@ export function loadConfig(): IConfig {
   return {
     nodeEnv: NODE_ENV || 'development',
     port: parseInt(PORT || '3000', 10),
-    supabaseUrl: SUPABASE_URL || 'https://your-project.supabase.co',
-    supabaseAnonKey: SUPABASE_ANON_KEY || 'your-anon-key',
+    supabaseUrl: SUPABASE_URL || 'https://x.supabase.co',
+    supabaseAnonKey: SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_x',
     redisUri: REDIS_URI || 'redis://localhost:6379',
-    redisPassword: REDIS_URI ?? '',
+    redisPassword: REDIS_PASSWORD || '',
     rabbitMqUrl: RABBITMQ_URL || 'amqp://localhost:5672',
     otelExporterEndpoint: OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
     serviceName: OTEL_SERVICE_NAME || 'daily-sorte-astroengine',
