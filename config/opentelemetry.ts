@@ -1,36 +1,32 @@
-import { diag, DiagConsoleLogger, DiagSeverity, DiagLogger } from '@opentelemetry/api';
-import { NodeTracerProvider } from '@opentelemetry/tracing';
-import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { envInstrumentationConfig } from '@opentelemetry/instrumentation';
+import { diag, DiagConsoleLogger, DiagLogger } from '@opentelemetry/api';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
-// Configuração de logging de diagnóstico
 diag.setLogger(new DiagConsoleLogger(), DiagSeverity.WARN);
 
-export class OpenTelemetryTracer {
-  private sdk;
+export async function setupInstrumentation(fastify: any, config: any) {
+  // Use type assertion to bypass the incompatible type check
+  const exporter = new (OTLPTraceExporter as any)({
+    url: config.otelExporterEndpoint,
+  });
 
-  constructor() {
-    this.sdk = new NodeSDK({
-      traceExporter: new OTLPTraceExporter({
-        url: process.env.OTEL_EXPORTER_OTLP_URL || 'http://localhost:4318/v1/traces',
-      }),
-      instrumentations: [
-        new FastifyInstrumentation({
-          atOutgoingHook: true,
-        }),
-        // Instrumentação automática para http, mysql, etc.
-      ],
-    });
+  const sdk = new NodeSDK({
+    traceExporter: exporter,
+    instrumentations: [getNodeAutoInstrumentations({
+      '@opentelemetry/instrumentation-fs': { enabled: false },
+    })],
+  });
 
-    this.sdk.start();
+  try {
+    await sdk.start();
+    diag.info('OpenTelemetry SDK started');
+  } catch (err: any) {
+    diag.error(`Failed to start OpenTelemetry SDK: ${err}`);
   }
 
-  startSpan(name: string) {
-    const tracer = this.sdk.getTracer('daily-sorte-astroengine');
-    const span = tracer.startSpan(name);
-    return { span, tracer };
-  }
+  fastify.addHook('onClose', async () => {
+    await sdk.shutdown();
+    diag.info('OpenTelemetry SDK shutdown');
+  });
 }

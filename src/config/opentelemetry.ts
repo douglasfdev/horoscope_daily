@@ -26,3 +26,5 @@ export async function setupInstrumentation(fastify: any, config: any) {
     diag.info('OpenTelemetry SDK shutdown');
   });
 }
+
+export { diag, DiagConsoleLogger, DiagLogLevel };
