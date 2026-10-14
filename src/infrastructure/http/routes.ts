@@ -18,6 +18,7 @@ export async function routes(fastify: FastifyInstance, useCases: {
           properties: {
             sign: { type: 'string' },
             lang: { type: 'string', default: 'pt' },
+            date: { type: 'string', format: 'date' },
           },
           required: ['sign'],
         },
@@ -46,11 +47,13 @@ export async function routes(fastify: FastifyInstance, useCases: {
       },
       handler: async (request, reply) => {
         try {
-          const { sign, lang } = request.query as { sign: string; lang?: string };
+          const { sign, lang, date } = request.query as { sign: string; lang?: string; date?: string };
           const normalizedSign = Sign.create(sign);
+          const targetDate = date ? new Date(date) : undefined;
           const result = await getDailyHoroscopeUseCase.execute(
             normalizedSign.toString(),
-            lang || 'pt'
+            lang || 'pt',
+            targetDate
           );
           return reply.code(200).send({
             sign: result.sign,
@@ -81,7 +84,7 @@ export async function routes(fastify: FastifyInstance, useCases: {
           type: 'object',
           required: ['birthDate', 'birthTime', 'latitude', 'longitude'],
           properties: {
-            birthDate: { type: 'string', format: 'date-time' },
+            birthDate: { type: 'string', format: 'date' },
             birthTime: { type: 'string' },
             latitude: { type: 'number' },
             longitude: { type: 'number' },

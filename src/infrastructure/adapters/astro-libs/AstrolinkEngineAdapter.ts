@@ -4,9 +4,24 @@ import { Coordinate } from '../../../domain/value-objects/Coordinate.js';
 import { inject, injectable } from 'inversify';
 import { Constants, load } from '@fusionstrings/swiss-eph';
 import { Location } from '../../../domain/value-objects/location.js';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require_ = createRequire(__filename);
 
 @injectable()
 export class AstrolinkEngineAdapter implements AstroCalculationPort {
+  private ephPromise?: Promise<any>;
+
+  private getEph(): Promise<any> {
+    if (!this.ephPromise) {
+      const wasmPath = require_.resolve('@fusionstrings/swiss-eph/wasm');
+      const bytes = new Uint8Array(readFileSync(wasmPath));
+      this.ephPromise = load(bytes);
+    }
+    return this.ephPromise;
+  }
+
   calculateNatalChart(date: Date, time: string, location: Location): Promise<any> {
     throw new Error('Method not implemented.');
   }
@@ -24,7 +39,7 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
     let birthTimeStr = birthTime instanceof Date ? birthTime.toTimeString().split(' ')[0] : String(birthTime).trim();
     const birthTimeObj = new Date(`1970-01-01T${birthTimeStr}`);
 
-    const eph = await load();
+    const eph = await this.getEph();
 
     const julday = eph.swe_julday(
       birthDateObj.getFullYear(),
@@ -94,7 +109,7 @@ export class AstrolinkEngineAdapter implements AstroCalculationPort {
     const targetDate = date || new Date();
     const targetDateObj = targetDate instanceof Date ? targetDate : new Date(targetDate);
 
-    const eph = await load();
+    const eph = await this.getEph();
 
     const julday = eph.swe_julday(
       targetDateObj.getFullYear(),
