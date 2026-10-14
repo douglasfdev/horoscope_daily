@@ -1,7 +1,8 @@
 export interface IConfig {
   nodeEnv: string;
   port: number;
-  mongodbUri: string;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
   redisUri: string;
   redisPassword: string;
   rabbitMqUrl: string;
@@ -12,7 +13,8 @@ export interface IConfig {
 const {
   NODE_ENV,
   PORT,
-  MONGODB_URI,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
   REDIS_URI,
   
   RABBITMQ_URL,
@@ -24,7 +26,8 @@ export function loadConfig(): IConfig {
   return {
     nodeEnv: NODE_ENV || 'development',
     port: parseInt(PORT || '3000', 10),
-    mongodbUri: MONGODB_URI || 'mongodb://localhost:27017/daily-sorte-astro',
+    supabaseUrl: SUPABASE_URL || 'https://your-project.supabase.co',
+    supabaseAnonKey: SUPABASE_ANON_KEY || 'your-anon-key',
     redisUri: REDIS_URI || 'redis://localhost:6379',
     redisPassword: REDIS_URI ?? '',
     rabbitMqUrl: RABBITMQ_URL || 'amqp://localhost:5672',

@@ -1,37 +1,37 @@
 version: '3.8'
 
 services:
-  mongo:
-    image: mongo:7
-    container_name: daily-sorte-mongo
+  postgres:
+    image: postgres:15
+    container_name: daily-sorte-postgres
     ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
+      - "5432:5432"
     environment:
-      MONGO_INITDB_DATABASE: daily-sorte-astro
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin123
+      POSTGRES_DB: daily-sorte-astro
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - astro-network
 
   keycloak:
     image: quay.io/keycloak/keycloak:23.0.3
     container_name: daily-sorte-keycloak
-    command: start-dev --http-port=8080 ---db-url mongodb://admin:admin123@mongo:27017/daily-sorte-astro --log-level=DEBUG
+    command: start-dev --http-port=8080 --db-url postgres://admin:admin123@postgres:5432/daily-sorte-astro --log-level=DEBUG
     ports:
       - "8080:8080"
     environment:
-      KC_DB: mongodb
-      KC_MLDB_MongoDB_Database: daily-sorte-astro
-      KC_MLDB_MongoDB_Username: admin
-      KC_MLDB_MongoDB_Password: admin123
-      KC_MLDB_MongoDB_URL: mongodb://admin:admin123@mongo:27017
+      KC_DB: postgres
+      KC_POSTGRES_DB: daily-sorte-astro
+      KC_POSTGRES_USER: admin
+      KC_POSTGRES_PASSWORD: admin123
+      KC_POSTGRES_URL: postgres://admin:admin123@postgres:5432/daily-sorte-astro
       KC_LOG_LEVEL: DEBUG
     networks:
       - astro-network
     depends_on:
-      - mongo
+      - postgres
 
   kong:
     image: kong:3.5
@@ -41,7 +41,7 @@ services:
       - "8000:8000"
     environment:
       KONG_DATABASE: "postgres"
-      KONG_DATABASE_HOST: mongo
+      KONG_DATABASE_HOST: postgres
       KONG_DATABASE_DATABASE: daily-sorte-astro
       KONG_DATABASE_USERNAME: admin
       KONG_DATABASE_PASSWORD: admin123
@@ -52,14 +52,12 @@ services:
     networks:
       - astro-network
     depends_on:
-      - mongo
-    volumes:
-      - ./kong/kong.yml:/etc/kong/kong.yml:ro
+      - postgres
 
 networks:
   astro-network:
     driver: bridge
 
 volumes:
-  mongodb_data:
+  postgres_data:
     driver: local

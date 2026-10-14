@@ -1,7 +1,7 @@
-import Redis from 'ioredis';
-import { loadConfig } from '../../config';
-import { Profile } from '../database/models/profile.model';
-import { WhatsAppService, WhatsAppMessage, WhatsAppSendResult } from '../services/whatsapp.service';
+import { Redis } from 'ioredis';
+import { loadConfig } from '../../config/index.js';
+import { Profile } from '../database/models/profile.model.js';
+import { WhatsAppService, WhatsAppMessage, WhatsAppSendResult } from '../services/whatsapp.service.js';
 
 let redisClient: Redis;
 let whatsAppService: WhatsAppService | null = null;

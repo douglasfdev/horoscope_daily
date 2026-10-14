@@ -1,13 +1,13 @@
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
-import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging';
-import { loadConfig } from '../config';
-import { setupInstrumentation } from '../config/opentelemetry';
-import { routes } from '../infrastructure/http/routes';
-import { TYPES } from '../application/di/types';
-import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter';
-import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter';
-import { Profile } from './database/models/profile.model';
+import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging/index.js';
+import { loadConfig } from '../config/index.js';
+import { setupInstrumentation } from '../config/opentelemetry.js';
+import { routes } from './http/routes.js';
+import { TYPES } from '../application/di/types.js';
+import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter.js';
+import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter.js';
+import { Profile, supabase } from './database/models/profile.model.js';
 
 let redisClient: import('ioredis').Redis;
 
@@ -28,8 +28,8 @@ async function bootstrap() {
 
   fp(async (instance: any) => {
     await routes(instance, {
-      getDailyHoroscopeUseCase: new (await import('../application/use-cases/get-daily-horoscope.use-case')).GetDailyHoroscopeUseCase(horoscopeAdapter),
-      generateNatalChartUseCase: new (await import('../application/use-cases/generate-advanced-natal-chart.use-case')).GenerateAdvancedNatalChartUseCase(astroAdapter),
+      getDailyHoroscopeUseCase: new (await import('../application/use-cases/get-daily-horoscope.use-case.js')).GetDailyHoroscopeUseCase(horoscopeAdapter),
+      generateNatalChartUseCase: new (await import('../application/use-cases/generate-advanced-natal-chart.use-case.js')).GenerateAdvancedNatalChartUseCase(astroAdapter),
     });
   });
 

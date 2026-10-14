@@ -1,9 +1,9 @@
-import { AstroCalculationPort } from '../../../application/ports/astro-calculation.port';
-import { NatalChartEntity } from '../../../domain/entities/NatalChartEntity';
-import { Coordinate } from '../../../domain/value-objects/Coordinate';
+import { AstroCalculationPort } from '../../../application/ports/astro-calculation.port.js';
+import { NatalChartEntity } from '../../../domain/entities/NatalChartEntity.js';
+import { Coordinate } from '../../../domain/value-objects/Coordinate.js';
 import { inject, injectable } from 'inversify';
-import eph, { Constants, load } from '@fusionstrings/swiss-eph';
-import { Location } from '../../../domain/value-objects/location';
+import { Constants, load } from '@fusionstrings/swiss-eph';
+import { Location } from '../../../domain/value-objects/location.js';
 
 @injectable()
 export class AstrolinkEngineAdapter implements AstroCalculationPort {
