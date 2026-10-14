@@ -124,7 +124,7 @@ export async function routes(fastify: FastifyInstance, useCases: {
           );
           return reply.code(201).send({
             message: 'Mapa astral natal gerado com sucesso',
-            chartId: `${result.generatedAt.getTime()}-${result.ascendente}`,
+            chartId: `${result.generatedAt.getTime()}-${result.ascendant}`,
             generatedAt: result.generatedAt.toISOString(),
           });
         } catch (error: any) {

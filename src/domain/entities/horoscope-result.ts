@@ -1,4 +1,4 @@
-import { Language } from '../value-objects/language';
+import { Language } from '../value-objects/language.js';
 
 export interface HoroscopeResult {
   sign: string;

@@ -1,14 +1,14 @@
 import 'reflect-metadata';
-import { AstroCalculationPort } from '../../application/ports/astro-port';
-import { NatalChartEntity } from '../../domain/entities/NatalChartEntity';
-import { Coordinate } from '../../domain/value-objects/Coordinate';
+import { AstroCalculationPort } from '../../application/ports/astro-port.js';
+import { NatalChartEntity } from '../../domain/entities/NatalChartEntity.js';
+import { Coordinate } from '../../domain/value-objects/Coordinate.js';
 import { injectable } from 'inversify';
 
 @injectable()
 export class GenerateAdvancedNatalChartUseCase {
   constructor(
     private astroCalculationPort: AstroCalculationPort
-  ) {}
+  ) { }
 
   async execute(
     birthDate: string,

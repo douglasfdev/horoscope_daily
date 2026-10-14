@@ -1,4 +1,4 @@
-import { Language } from '../value-objects/language';
+import { Language } from '../value-objects/language.js';
 
 export class BirthDate {
   public readonly value: Date;
@@ -13,12 +13,12 @@ export class BirthDate {
 
   format(format: 'short' | 'long' = 'short'): string {
     if (format === 'long') {
-      return this.value.toLocaleDateString(undefined, { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      return this.value.toLocaleDateString(undefined, {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
       });
     }
-    return this.value.toLocaleDateString(undefined, { 
-      year: 'numeric', month: '2-digit', day: '2-digit' 
+    return this.value.toLocaleDateString(undefined, {
+      year: 'numeric', month: '2-digit', day: '2-digit'
     });
   }
 }

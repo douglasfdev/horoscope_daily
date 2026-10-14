@@ -1,4 +1,4 @@
-import { Location } from '../../domain/value-objects/location';
+import { Location } from '../../domain/value-objects/location.js';
 
 export interface AstroCalculationPort {
   calculateNatalChart(

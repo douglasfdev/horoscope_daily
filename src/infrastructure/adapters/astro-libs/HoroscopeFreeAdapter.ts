@@ -1,9 +1,8 @@
-import { getHoroscope, HoroscopeError, ZodiacSign, Language } from 'horoscopefree';
+import { getHoroscope, HoroscopeError, Language, ZodiacSign } from 'horoscopefree';
+import { injectable } from 'inversify';
 import { HoroscopeEnginePort } from '../../../application/ports/astro-port.js';
 import { HoroscopeEntity } from '../../../domain/entities/HoroscopeEntity.js';
 import { Sign } from '../../../domain/value-objects/Sign.js';
-import { inject, injectable } from 'inversify';
-import { TYPES } from '../../../application/di/types.js';
 
 @injectable()
 export class HoroscopeFreeAdapter implements HoroscopeEnginePort {

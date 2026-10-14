@@ -7,8 +7,6 @@ import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/Horo
 import { closeRedis, initRedis } from '../infrastructure/messaging/index.js';
 import { routes } from './http/routes.js';
 
-let redisClient: import('ioredis').Redis;
-
 async function bootstrap() {
   console.log('🚀 Starting Daily Sorte & AstroEngine...');
 

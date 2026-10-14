@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+const { SUPABASE_URL, REDIS_PASSWORD } = process.env;
 
 export interface IProfile {
   userId: string;       // Referência ao usuário (do Keycloak ou local)
@@ -12,8 +13,8 @@ export interface IProfile {
 export type Profile = IProfile;
 
 export const supabase: SupabaseClient = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
+  SUPABASE_URL!,
+  REDIS_PASSWORD!
 );
 
 export async function getProfile(userId: string): Promise<IProfile | null> {
@@ -22,7 +23,7 @@ export async function getProfile(userId: string): Promise<IProfile | null> {
     .select('*')
     .eq('user_id', userId)
     .single();
-  
+
   if (error) return null;
   return data as IProfile;
 }
@@ -38,7 +39,7 @@ export async function saveProfile(profile: IProfile): Promise<IProfile> {
     })
     .select()
     .single();
-  
+
   if (error) throw error;
   return data as IProfile;
 }

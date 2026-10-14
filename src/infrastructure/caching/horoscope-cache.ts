@@ -1,12 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { injectable } from 'inversify';
 import { Redis } from 'ioredis';
 import { HoroscopeEntity } from '../../domain/entities/HoroscopeEntity.js';
-import { Sign } from '../../domain/value-objects/Sign.js';
 import { DateTimeVO } from '../../domain/value-objects/DateTimeVO.js';
-import { injectable } from 'inversify';
+import { Sign } from '../../domain/value-objects/Sign.js';
 
 import { loadConfig } from '../../config/index.js';
-import { getProfile } from '../database/models/profile.model.js';
 
 export interface ICachedHoroscope {
   sign: string;
@@ -86,8 +85,8 @@ export class HoroscopeCacheService {
   ): Promise<ICachedHoroscope | null> {
     const redis = this.getRedisClient();
     const signObj = Sign.create(sign);
-    const normalizedDate = date 
-      ? DateTimeVO.create(date.toISOString()).toDateString() 
+    const normalizedDate = date
+      ? DateTimeVO.create(date.toISOString()).toDateString()
       : DateTimeVO.create(new Date().toISOString()).toDateString();
 
     const redisKey = this.getRedisKey(signObj.value, lang, normalizedDate);
