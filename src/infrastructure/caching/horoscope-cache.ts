@@ -139,7 +139,7 @@ export class HoroscopeCacheService {
       luckyNumber: data.payload?.luckyNumber || 1,
       color: data.payload?.color || 'cinza',
       compatibility: data.payload?.compatibility || [],
-      generatedAt: new Date(data.createdAt),
+      generatedAt: new Date(data.created_at || data.createdAt),
       source: 'supabase' as const,
     } as ICachedHoroscope;
   }
@@ -204,8 +204,8 @@ export class HoroscopeCacheService {
           color: cachedData.color,
           compatibility: cachedData.compatibility,
         },
-        createdAt: new Date(),
-      });
+        created_at: new Date(),
+      }, { onConflict: 'sign,language,date' });
 
     if (error) {
       console.error('❌ Failed to save horoscope to Supabase:', error);

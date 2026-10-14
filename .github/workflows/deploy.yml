@@ -13,6 +13,10 @@ env:
   SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
   SUPABASE_JWKS_URL: ${{ secrets.SUPABASE_JWKS_URL }}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -42,9 +46,8 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
       contents: write
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -77,6 +80,35 @@ jobs:
           tags: |
             ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+
+  migrate:
+    name: Run database migrations
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: production
+    # Only migrate real environments, never from pull requests.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply Supabase migrations
+        run: npm run migrate
+        env:
+          # Preferred: full Postgres connection string.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Fallback: the runner builds the URL from these two.
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
   infrastructure:
     needs: docker-build
@@ -128,7 +160,7 @@ jobs:
           curl -s http://localhost:8000/services
 
   deploy:
-    needs: infrastructure
+    needs: [infrastructure, migrate]
     runs-on: ubuntu-latest
     environment: production
     steps:
