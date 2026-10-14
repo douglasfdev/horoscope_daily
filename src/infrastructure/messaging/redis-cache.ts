@@ -1,7 +1,6 @@
 import { Redis } from 'ioredis';
 import { loadConfig } from '../../config/index.js';
-import { Profile } from '../database/models/profile.model.js';
-import { WhatsAppService, WhatsAppMessage, WhatsAppSendResult } from '../services/whatsapp.service.js';
+import { WhatsAppService } from '../services/whatsapp.service.js';
 
 let redisClient: Redis;
 let whatsAppService: WhatsAppService | null = null;
@@ -11,11 +10,11 @@ let whatsAppService: WhatsAppService | null = null;
  * O WhatsApp Service será inicializado somente quando houver credencials configuradas.
  */
 export function initRedis(config?: any): void {
-  redisClient = new Redis({
-    host: loadConfig().redisUri?.replace('rediss://', '') || 'localhost',
-    port: 6379,
-    maxRetriesPerRequest: 3,
-  });
+  redisClient = new Redis(loadConfig().redisUri || '',
+    {
+      maxRetriesPerRequest: 3
+    }
+  );
 
   redisClient.on('connect', () => {
     console.log('✅ Redis connected successfully (redis-cache)');

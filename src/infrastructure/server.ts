@@ -1,18 +1,14 @@
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
+import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging';
 import { loadConfig } from '../config/index.js';
 import { setupInstrumentation } from '../config/opentelemetry.js';
 import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter.js';
 import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter.js';
-import { closeRedis, initRedis } from '../infrastructure/messaging/index.js';
 import { routes } from './http/routes.js';
-
+import "dotenv/config";
 async function bootstrap() {
-  console.log('🚀 Starting Daily Sorte & AstroEngine...');
-
   const config = loadConfig();
-  console.log(`📋 Config: NODE_ENV=${config.nodeEnv}, PORT=${config.port}`);
-
   const fastify = Fastify({ logger: { level: config.nodeEnv === 'development' ? 'info' : 'warn' } });
 
   await setupInstrumentation(fastify, config);
@@ -30,7 +26,6 @@ async function bootstrap() {
   });
 
   const listenAddr = await fastify.listen({ port: config.port, host: '0.0.0.0' });
-  console.log(`🌍 Server running at: ${listenAddr}`);
 
   process.on('SIGINT', async () => {
     await fastify.close();

@@ -1,3 +1,5 @@
+import "dotenv/config"
+
 export interface IConfig {
   nodeEnv: string;
   port: number;
@@ -39,7 +41,7 @@ export function loadConfig(): IConfig {
     port: parseInt(PORT || '3000', 10),
     supabaseUrl: SUPABASE_URL || 'https://x.supabase.co',
     supabaseAnonKey: SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_x',
-    redisUri: REDIS_URI || 'redis://localhost:6379',
+    redisUri: REDIS_URI || 'https://valid-moose-232668.upstash.io',
     redisPassword: REDIS_PASSWORD || '',
     rabbitMqUrl: RABBITMQ_URL || 'amqp://localhost:5672',
     otelExporterEndpoint: OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
