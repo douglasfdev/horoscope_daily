@@ -1,12 +1,15 @@
 import Fastify from 'fastify';
 import fp from 'fastify-plugin';
-import { initRedis, closeRedis } from '../infrastructure/messaging';
+import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging';
 import { loadConfig } from '../config';
 import { setupInstrumentation } from '../config/opentelemetry';
 import { routes } from '../infrastructure/http/routes';
 import { TYPES } from '../application/di/types';
 import { HoroscopeFreeAdapter } from '../infrastructure/adapters/astro-libs/HoroscopeFreeAdapter';
 import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter';
+import { Profile } from './database/models/profile.model';
+
+let redisClient: import('ioredis').Redis;
 
 async function bootstrap() {
   console.log('🚀 Starting Daily Sorte & AstroEngine...');

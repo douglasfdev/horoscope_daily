@@ -30,7 +30,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/tsconfig.json ./
 
 # Install production dependencies only
-RUN npm ci --production=false
+RUN npm ci --production
 
 # Set environment labels
 LABEL org.opencontainers.image.source="https://github.com/your-repo"
