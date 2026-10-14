@@ -1,0 +1,39 @@
+admin:
+  http: "0.0.0.0:8000"
+
+admin_gui:
+  http: "0.0.0.0:8000"
+
+default_service: http://keycloak:8080
+
+ugins:
+  - keycloak
+
+plugins:
+  keycloak:
+    client_id: daily-sorte-frontend
+    client_secret: keycloak-client-secret
+    issuer: http://keycloak:8080/auth/realms/master/realm
+    logout:
+      default_url: http://localhost:8080/auth/logout
+
+services:
+  api:
+    url: "http://api:3333"
+    middlewares:
+      - auth
+    plugins:
+      - keycloak
+
+middlewares:
+  auth:
+    rule:
+      hosts:
+        - api.example.com
+    action:
+      pass: []
+      redirect:
+        url: http://keycloak:8080/auth/login
+
+plugins:
+  - keycloak

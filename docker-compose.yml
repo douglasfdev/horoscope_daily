@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  mongodb:
+  mongo:
     image: mongo:7
     container_name: daily-sorte-mongo
     ports:
@@ -10,32 +10,51 @@ services:
       - mongodb_data:/data/db
     environment:
       MONGO_INITDB_DATABASE: daily-sorte-astro
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
     networks:
       - astro-network
 
-  redis:
-    image: redis:7-alpine
-    container_name: daily-sorte-redis
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.3
+    container_name: daily-sorte-keycloak
+    command: start-dev --http-port=8080 ---db-url mongodb://admin:admin123@mongo:27017/daily-sorte-astro --log-level=DEBUG
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - astro-network
-
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: daily-sorte-rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - "8080:8080"
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin123
+      KC_DB: mongodb
+      KC_MLDB_MongoDB_Database: daily-sorte-astro
+      KC_MLDB_MongoDB_Username: admin
+      KC_MLDB_MongoDB_Password: admin123
+      KC_MLDB_MongoDB_URL: mongodb://admin:admin123@mongo:27017
+      KC_LOG_LEVEL: DEBUG
     networks:
       - astro-network
+    depends_on:
+      - mongo
+
+  kong:
+    image: kong:3.5
+    container_name: daily-sorte-kong
+    ports:
+      - "8443:8443"
+      - "8000:8000"
+    environment:
+      KONG_DATABASE: "postgres"
+      KONG_DATABASE_HOST: mongo
+      KONG_DATABASE_DATABASE: daily-sorte-astro
+      KONG_DATABASE_USERNAME: admin
+      KONG_DATABASE_PASSWORD: admin123
+      KONG_PROXY_ACCESS_LOG: "/dev/stdout"
+      KONG_ERROR_LOG: "/dev/stdout"
+      KONG_NGINX_ANNOTATIONS_CONFIG: |
+        {{ range .Service .Labels }}{{-/* Kong will generate its own ingress/egress. This config can be used to define custom Nginx annotations or additional snippets. */}}-}
+    networks:
+      - astro-network
+    depends_on:
+      - mongo
+    volumes:
+      - ./kong/kong.yml:/etc/kong/kong.yml:ro
 
 networks:
   astro-network:
@@ -43,8 +62,4 @@ networks:
 
 volumes:
   mongodb_data:
-    driver: local
-  redis_data:
-    driver: local
-  rabbitmq_data:
     driver: local
