@@ -1,13 +1,163 @@
-import { FastifyInstance, RouteOptions } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import { GetDailyHoroscopeUseCase } from '../../application/use-cases/get-daily-horoscope.use-case.js';
 import { GenerateAdvancedNatalChartUseCase } from '../../application/use-cases/generate-advanced-natal-chart.use-case.js';
 import { Sign } from '../../domain/value-objects/Sign.js';
+import { supabase } from '../../infrastructure/database/models/profile.model.js';
 
 export async function routes(fastify: FastifyInstance, useCases: {
   getDailyHoroscopeUseCase: GetDailyHoroscopeUseCase;
   generateNatalChartUseCase: GenerateAdvancedNatalChartUseCase;
 }) {
   const { getDailyHoroscopeUseCase, generateNatalChartUseCase } = useCases;
+
+  fastify.get(
+    '/v1/profile/:userId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string' },
+          },
+          required: ['userId'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              userId: { type: 'string' },
+              phone: { type: 'string' },
+              preferredLanguage: { type: 'string' },
+              notificationOptIn: { type: 'boolean' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+            },
+          },
+        },
+      },
+      handler: async (request, reply) => {
+        try {
+          const { userId } = request.params as { userId: string };
+          const { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+
+          if (error) {
+            return reply.code(404).send({ error: 'Profile not found' });
+          }
+
+          return reply.code(200).send({
+            userId: data.user_id,
+            phone: data.phone,
+            preferredLanguage: data.preferred_language,
+            notificationOptIn: data.notification_opt_in,
+            createdAt: data.created_at.toISOString(),
+            updatedAt: data.updated_at.toISOString(),
+          });
+        } catch (err: any) {
+          fastify.log.error(err, 'Error fetching profile');
+          return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: err.message,
+          });
+        }
+      },
+    }
+  );
+
+  fastify.post(
+    '/v1/profile/:userId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string' },
+          },
+          required: ['userId'],
+        },
+        body: {
+          type: 'object',
+          required: ['userId'],
+          properties: {
+            userId: { type: 'string' },
+            phone: { type: 'string' },
+            preferredLanguage: { type: 'string' },
+            notificationOptIn: { type: 'boolean' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              userId: { type: 'string' },
+              phone: { type: 'string' },
+              preferredLanguage: { type: 'string' },
+              notificationOptIn: { type: 'boolean' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+          400: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+            },
+          },
+        },
+      },
+      handler: async (request, reply) => {
+        try {
+          const { userId } = request.params as { userId: string };
+          const { phone, preferredLanguage, notificationOptIn } = request.body as { phone?: string; preferredLanguage?: string; notificationOptIn?: boolean };
+
+          const { data, error } = await supabase.from('profiles').upsert({
+            user_id: userId,
+            phone,
+            preferred_language: preferredLanguage,
+            notification_opt_in: notificationOptIn,
+          }).select().single();
+
+          if (error) {
+            return reply.code(500).send({ error: error.message });
+          }
+
+          return reply.code(200).send({
+            userId: data.user_id,
+            phone: data.phone,
+            preferredLanguage: data.preferred_language,
+            notificationOptIn: data.notification_opt_in,
+            createdAt: data.created_at.toISOString(),
+            updatedAt: data.updated_at.toISOString(),
+          });
+        } catch (err: any) {
+          fastify.log.error(err, 'Error saving profile');
+          return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: err.message,
+          });
+        }
+      },
+    }
+  );
 
   fastify.get(
     '/v1/horoscope/daily',

@@ -6,14 +6,18 @@ create extension if not exists pgcrypto;
 
 -- Daily horoscope cache (see src/infrastructure/caching/horoscope-cache.ts)
 create table if not exists public.horoscopes (
-  id          uuid        primary key default gen_random_uuid(),
-  sign        text        not null,
-  language    text        not null default 'pt',
-  "date"      date        not null,
-  payload     jsonb       not null default '{}'::jsonb,
-  created_at  timestamptz not null default now(),
+  id              uuid        primary key default gen_random_uuid(),
+  user_id         text        references profiles(user_id),
+  sign            text        not null,
+  language        text        not null default 'pt',
+  "date"          date        not null,
+  payload         jsonb       not null default '{}'::jsonb,
+  created_at      timestamptz not null default now(),
   constraint horoscopes_sign_language_date_key unique (sign, language, "date")
 );
+
+create index if not exists horoscopes_user_id_idx
+  on public.horoscopes (user_id);
 
 create index if not exists horoscopes_sign_language_date_idx
   on public.horoscopes (sign, language, "date");
