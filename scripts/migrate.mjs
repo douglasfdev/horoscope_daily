@@ -30,8 +30,10 @@ function resolveDatabaseUrl() {
       const db = SUPABASE_DB_NAME || 'postgres';
       const port = SUPABASE_DB_PORT || '5432';
       const host = SUPABASE_DB_HOST || `db.${ref}.supabase.co`;
+      // Force IPv4 by using hostname resolution
       const enc = encodeURIComponent(password);
-      return `postgresql://${user}:${enc}@${host}:${port}/${db}`;
+      // Try with explicit IPv4 preference by using the hostname
+      return `postgresql://${user}:${enc}@${host}:${port}/${db}?sslmode=require`;
     }
   }
 
@@ -51,9 +53,11 @@ async function runMigrations() {
     process.exit(1);
   }
 
+  // Force IPv4 connection
   const pool = new Pool({
     connectionString: databaseUrl,
     ssl: { rejectUnauthorized: false },
+    family: 4,  // Force IPv4
   });
 
   try {
