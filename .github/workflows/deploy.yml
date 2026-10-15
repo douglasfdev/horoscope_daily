@@ -167,7 +167,83 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy application
-        run: |
-          echo "Application deployment complete"
-          # Additional deployment steps can be added here
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          PORT: ${{ secrets.PORT }}
+          HOST: ${{ secrets.HOST }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_JWKS_URL: ${{ secrets.SUPABASE_JWKS_URL }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          KEYCLOAK_ISSUER: ${{ secrets.KEYCLOAK_ISSUER }}
+          KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+          REDIS_URI: ${{ secrets.REDIS_URI }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          NODE_ENV: production
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_NAME: ${{ needs.docker-build.outputs.image_tag }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 5m
+          envs: DIRECT_URL,DATABASE_URL,APP_BASE_URL,SESSION_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,WOOVI_API_KEY,WOOVI_API_BASE_URL,GITHUB_ACTOR,GITHUB_TOKEN,IMAGE_NAME
+          script: |
+            set -e
+
+            sudo mkdir -p /var/www/daily-sorte
+            sudo chown -R $USER:$USER /var/www/daily-sorte
+            cd /var/www/daily-sorte
+
+            # Extrai só a tag :latest da lista de tags (pode vir múltiplas)
+            FULL_IMAGE=$(echo "$IMAGE_NAME" | tr ',' '\n' | grep ':latest')
+
+            # Grava o .env
+            printf 'NODE_ENV=production\n'                       > .env
+            printf 'PORT=3000\n'                                >> .env
+            printf 'DIRECT_URL=%s\n'           "$DIRECT_URL"   >> .env
+            printf 'DATABASE_URL=%s\n'         "$DATABASE_URL" >> .env
+            printf 'APP_BASE_URL=%s\n'         "$APP_BASE_URL" >> .env
+            printf 'SESSION_SECRET=%s\n'       "$SESSION_SECRET" >> .env
+
+            # Grava o docker-compose.yml usando a imagem correta
+            cat > docker-compose.yml << COMPOSE
+            services:
+              api:
+                image: ${FULL_IMAGE}
+                container_name: daily-sorte
+                restart: unless-stopped
+                ports:
+                  - "3000:3000"
+                env_file:
+                  - .env
+                environment:
+                  NODE_ENV: production
+                  PORT: "3000"
+                healthcheck:
+                  test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 15s
+            COMPOSE
+
+            # Login no GHCR
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+            # Pull e recria o container
+            docker pull "${FULL_IMAGE}"
+            docker compose down --remove-orphans 2>/dev/null || true
+            docker compose up -d
+
+            # Limpa imagens antigas
+            docker image prune -f
+
+            echo "✅ Deploy concluído."
+            docker compose ps

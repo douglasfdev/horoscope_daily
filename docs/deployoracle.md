@@ -1,4 +1,3 @@
-Preciso que você monte um CI/CD para mim semelhante a esse, com intuito de hospedar a solução na VPS da Oracle:
 name: Deploy to VPS
 
 on:
