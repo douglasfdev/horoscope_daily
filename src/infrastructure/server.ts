@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging';
+import { initRedis, closeRedis, getWhatsAppService, isWhatsAppAvailable, getRedis } from '../infrastructure/messaging/index.js';
 import { loadConfig } from '../config/index.js';
 import { setupInstrumentation, diag } from '../config/opentelemetry.js';
 import { AstrolinkEngineAdapter } from '../infrastructure/adapters/astro-libs/AstrolinkEngineAdapter.js';

@@ -1,8 +1,9 @@
 {
   "name": "daily-sorte-astroengine",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Micro SaaS de astrologia e sorte do dia - Local Libraries Edition",
   "main": "dist/server.js",
+  "type": "module",
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "node dist/infrastructure/server.js",
