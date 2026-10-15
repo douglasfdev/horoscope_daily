@@ -4,9 +4,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
-    coverage: {
-      enabled: false,
-    },
+    include: ['src/**/*.test.ts'],
+    exclude: ['node_modules', 'dist'],
+    // CI/CD: run once and exit, don't watch
+    watch: false,
   },
 })
