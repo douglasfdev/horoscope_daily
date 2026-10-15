@@ -15,5 +15,3 @@ logs/
 .idea/
 
 # Testing
-*.test.ts
-*.spec.ts
