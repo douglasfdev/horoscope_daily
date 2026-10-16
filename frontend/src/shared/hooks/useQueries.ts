@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileApi, horoscopeApi } from '@/shared/lib/api';
-import type { Profile, Horoscope, ZodiacSign } from '@/types/auth';
+import type { Profile, ZodiacSign } from '@/types/auth';
 
 // ============================================================================
 // Profile Queries
@@ -63,8 +63,6 @@ export function useDailyHoroscope(
 }
 
 export function useHoroscopeMutation() {
-  const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: ({ sign, date }: { sign: ZodiacSign; date?: string }) =>
       horoscopeApi.getDaily(sign, 'pt', date),

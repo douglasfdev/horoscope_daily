@@ -4,27 +4,36 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { profileApi } from '@/shared/lib/api';
 import { useAuthStore } from '@/app/stores/auth.store';
-import { zodiacSigns } from '@/shared/lib/zodiac';
 
 const profileSchema = z.object({
-  birthDate: z.date({
-    required_error: 'Data de nascimento é obrigatória',
-  }).refine((date) => date <= new Date(), {
-    message: 'Data de nascimento não pode ser futura',
-  }).refine((date) => {
-    const minAge = 13;
-    const age = new Date().getFullYear() - date.getFullYear();
-    return age >= minAge;
-  }, {
-    message: 'É necessário ter 13 anos ou mais',
-  }),
-  
-  phone: z.string().optional().refine((phone) => {
-    if (!phone?.trim()) return true;
-    return /^\+55\s?\d{2}\s?\d{4,5}-?\d{4}$/.test(phone.trim());
-  }, {
-    message: 'Formato inválido. Ex: +55 11 99999-9999',
-  }),
+  birthDate: z
+    .date({ message: 'Data de nascimento é obrigatória' })
+    .refine((date) => date <= new Date(), {
+      message: 'Data de nascimento não pode ser futura',
+    })
+    .refine(
+      (date) => {
+        const minAge = 13;
+        const age = new Date().getFullYear() - date.getFullYear();
+        return age >= minAge;
+      },
+      {
+        message: 'É necessário ter 13 anos ou mais',
+      }
+    ),
+
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (phone) => {
+        if (!phone?.trim()) return true;
+        return /^\+55\s?\d{2}\s?\d{4,5}-?\d{4}$/.test(phone.trim());
+      },
+      {
+        message: 'Formato inválido. Ex: +55 11 99999-9999',
+      }
+    ),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -38,53 +47,40 @@ export function ProfileForm() {
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
   });
-  
-  // Get watched data for preview
-  const birthDate = watch('birthDate');
-  
+
   const onSubmit = async (data: ProfileFormData) => {
     if (!user?.id) return;
-    
+
     setIsSubmitting(true);
     setSubmitError(null);
-    
+
     try {
       await profileApi.create({
-        userId: user.id,
         birthDate: data.birthDate.toISOString(),
         phone: data.phone?.trim() || null,
       });
-      
+
       // Profile created successfully - redirect to dashboard
       window.location.href = '/dashboard';
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } } };
       setSubmitError(
-        error.response?.data?.message || 
-        'Falha ao salvar perfil. Tente novamente.'
+        err.response?.data?.message ||
+          'Falha ao salvar perfil. Tente novamente.'
       );
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  // Format phone number with mask
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 2) return `+55 ${numbers}`;
-    if (numbers.length <= 4) return `+55 ${numbers.slice(0, 2)} ${numbers.slice(2)}`;
-    if (numbers.length <= 9) return `+55 ${numbers.slice(0, 2)} ${numbers.slice(2, 4)}-${numbers.slice(4)}`;
-    return `+55 ${numbers.slice(0, 2)} ${numbers.slice(2, 4)}-${numbers.slice(4, 9)}`;
-  };
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {submitError && (
@@ -92,7 +88,7 @@ export function ProfileForm() {
           {submitError}
         </div>
       )}
-      
+
       <div className="space-y-2">
         <label htmlFor="birthDate" className="text-sm font-medium leading-none">
           Data de Nascimento *
@@ -101,14 +97,14 @@ export function ProfileForm() {
           type="date"
           id="birthDate"
           max={new Date().toISOString().split('T')[0]}
-          {...register('birthDate')}
+          {...register('birthDate', { valueAsDate: true })}
           className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
         {errors.birthDate && (
           <p className="text-sm text-destructive">{errors.birthDate.message}</p>
         )}
       </div>
-      
+
       <div className="space-y-2">
         <label htmlFor="phone" className="text-sm font-medium leading-none">
           Telefone (opcional)
@@ -117,11 +113,7 @@ export function ProfileForm() {
           type="tel"
           id="phone"
           placeholder="+55 11 99999-9999"
-          {...register('phone', {
-            onChange: (e) => {
-              // Still use the raw value for validation
-            },
-          })}
+          {...register('phone')}
           className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
         {errors.phone && (
@@ -131,7 +123,7 @@ export function ProfileForm() {
           Para receber seus horóscopos por WhatsApp
         </p>
       </div>
-      
+
       <div className="pt-4">
         <button
           type="submit"

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/app/stores/auth.store';
-import { getKeycloak, initKeycloak as initKC } from '../lib/keycloak';
+import { initKeycloak as initKC } from '../lib/keycloak';
 
 /**
  * Hook to initialize Keycloak authentication
@@ -63,7 +63,7 @@ export function useAuth() {
  * Hook for profile-related logic
  */
 export function useProfile() {
-  const { profile, sign, setProfile, setSign } = useAuthStore();
+  const { profile, sign } = useAuthStore();
   
   return {
     profile,

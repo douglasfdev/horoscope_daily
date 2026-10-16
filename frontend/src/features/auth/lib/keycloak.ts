@@ -36,7 +36,6 @@ export async function initKeycloak(): Promise<{
       onLoad: 'login-required',
       pkceMethod: 'S256',
       checkLoginIframe: false,
-      saveTokens: true,
     });
     
     if (authenticated && kc?.tokenParsed) {

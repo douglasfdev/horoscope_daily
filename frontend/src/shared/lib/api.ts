@@ -64,10 +64,10 @@ api.interceptors.response.use(
 
 export const authApi = {
   /** Get current user from Keycloak */
-  get_me: () => api.get<User>('/auth/me'),
-  
+  get_me: () => api.get<User>('/auth/me').then((res) => res.data),
+
   /** Logout user */
-  logout: () => api.post('/auth/logout'),
+  logout: () => api.post('/auth/logout').then((res) => res.data),
 };
 
 // ============================================================================
@@ -76,14 +76,15 @@ export const authApi = {
 
 export const profileApi = {
   /** Get user profile */
-  get: () => api.get<Profile>('/api/profile'),
-  
+  get: () => api.get<Profile>('/api/profile').then((res) => res.data),
+
   /** Create or update profile */
   create: (data: { birthDate: string; phone?: string | null }) =>
-    api.post<Profile>('/api/profile', data),
-  
+    api.post<Profile>('/api/profile', data).then((res) => res.data),
+
   /** Update profile */
-  update: (data: Partial<Profile>) => api.put<Profile>('/api/profile', data),
+  update: (data: Partial<Profile>) =>
+    api.put<Profile>('/api/profile', data).then((res) => res.data),
 };
 
 // ============================================================================
@@ -93,9 +94,11 @@ export const profileApi = {
 export const horoscopeApi = {
   /** Get daily horoscope for a sign */
   getDaily: (sign: ZodiacSign, lang: string = 'pt', date?: string) =>
-    api.get<Horoscope>('/v1/horoscope/daily', {
-      params: { sign, lang, date },
-    }),
+    api
+      .get<Horoscope>('/v1/horoscope/daily', {
+        params: { sign, lang, date },
+      })
+      .then((res) => res.data),
 };
 
 export default api;

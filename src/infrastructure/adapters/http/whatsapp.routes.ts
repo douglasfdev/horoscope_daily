@@ -50,7 +50,7 @@ export async function whatsappSendMessage(
       });
     }
 
-    app.log.info(\Recebendo mensagem WhatsApp: \);
+    app.log.info(`Recebendo mensagem WhatsApp: ${message}`);
     
     const sendMessageUseCase = new SendMessageUseCase(whatsappService!);
     
@@ -85,7 +85,7 @@ export async function whatsappSendBatch(
       });
     }
 
-    app.log.info(\Recebendo batch WhatsApp: \ mensagens\);
+    app.log.info(`Recebendo batch WhatsApp: ${messages.length} mensagens`);
     
     const sendBatchUseCase = new SendBatchUseCase(whatsappService!);
     

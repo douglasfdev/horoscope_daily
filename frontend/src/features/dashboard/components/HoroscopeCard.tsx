@@ -1,5 +1,5 @@
 import { Card } from '@/shared/ui/Card';
-import { getSignName, getSignEmoji, getSignColor } from '@/shared/lib/zodiac';
+import { getSignEmoji, getSignColor } from '@/shared/lib/zodiac';
 import type { ZodiacSign } from '@/types/auth';
 
 interface HoroscopeCardProps {
@@ -15,7 +15,6 @@ interface HoroscopeCardProps {
  * Uses zodiac sign specific styling
  */
 export function HoroscopeCard({ sign, date, prediction, luckyNumber, color }: HoroscopeCardProps) {
-  const signInfo = getSignName(sign);
   const emoji = getSignEmoji(sign);
   const signColor = getSignColor(color);
   

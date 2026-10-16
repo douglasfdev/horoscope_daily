@@ -19,7 +19,7 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading, user, profile } = useAuthStore();
+  const { isAuthenticated, isLoading, profile } = useAuthStore();
   
   useEffect(() => {
     // Not loading and not authenticated

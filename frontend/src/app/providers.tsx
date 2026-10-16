@@ -14,7 +14,8 @@ export function Providers({ children }: { children: ReactNode }) {
           staleTime: 5 * 60 * 1000,
           // Don't retry on 404
           retry: (failureCount, error) => {
-            if (error.response?.status === 404) return false;
+            const status = (error as { response?: { status?: number } }).response?.status;
+            if (status === 404) return false;
             return failureCount < 3;
           },
           // Cache across redirects

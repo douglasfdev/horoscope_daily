@@ -1,7 +1,6 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/app/stores/auth.store';
 import { ProfileForm } from '../components/ProfileForm';
-import { zodiacSigns } from '@/shared/lib/zodiac';
 
 /**
  * ProfilePage - Page for users to complete their profile
@@ -10,19 +9,15 @@ import { zodiacSigns } from '@/shared/lib/zodiac';
 export function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, sign, setSign } = useAuthStore();
-  
+  const { sign } = useAuthStore();
+
   // Redirect if already has profile (sign exists)
   const from = (location.state as { from?: string })?.from || '/dashboard';
-  
+
   if (sign) {
-    navigate(from, { replace: true });
-    return null;
+    return <Navigate to={from} replace />;
   }
-  
-  // Calculate what sign would be (for display only)
-  const predictedSign = user?.birthDate ? zodiacSigns[new Date(user.birthDate).getMonth() + 1 as keyof typeof zodiacSigns] : null;
-  
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-background to-muted p-4">
       <div className="w-full max-w-2xl mx-auto">
@@ -34,24 +29,17 @@ export function ProfilePage() {
             Precisamos de alguns dados para personalizar seus horóscopos
           </p>
         </div>
-        
-        {predictedSign && (
-          <div className="mb-6 rounded-lg bg-card p-4 text-center">
-            <p className="text-sm text-muted-foreground">Seu signo será: </p>
-            <p className="text-xl font-semibold text-primary">{predictedSign.name}</p>
-          </div>
-        )}
-        
+
         <div className="rounded-lg bg-card p-6 shadow-sm">
           <ProfileForm />
         </div>
-        
+
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate('/')}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Volver ao início
+            Voltar ao início
           </button>
         </div>
       </div>
