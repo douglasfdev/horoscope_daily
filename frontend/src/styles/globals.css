@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables */
+  --background: 210 20% 98%;
+  --foreground: 210 15% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 15% 20%;
+  --primary: 200 82% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 15% 90%;
+  --secondary-foreground: 210 10% 20%;
+  --muted: 210 10% 96%;
+  --muted-foreground: 210 10% 40%;
+  --accent: 260 60% 60%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 65% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 210 20% 90%;
+  --input: 210 20% 90%;
+  --ring: 210 82% 55%;
+}
+
+/* Dark mode */
+.dark {
+  --background: 210 12% 6%;
+  --foreground: 0 0% 93%;
+  --card: 210 12% 10%;
+  --card-foreground: 0 0% 93%;
+  --primary: 200 82% 65%;
+  --secondary: 210 15% 25%;
+  --secondary-foreground: 0 0% 93%;
+  --muted: 210 10% 15%;
+  --muted-foreground: 210 10% 60%;
+  --accent: 260 60% 70%;
+  --border: 210 10% 20%;
+  --input: 210 10% 22%;
+  --ring: 200 82% 65%;
+}
+
+/* Typography */
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-feature-settings: 'liga' 1;
+}
+
+/* Base styles */
+body {
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.5;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  overflow-x: hidden;
+}
+
+/* Links */
+a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+/* Focus styles */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--ring));
+  border-radius: 50%;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+p {
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+/* Utility classes */
+.btn {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
