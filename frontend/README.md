@@ -6,10 +6,16 @@ Frontend SPA React para a aplicação Daily Sorte Astroengine.
 
 - **Framework:** React 18 + Vite 5
 - **UI:** Tailwind CSS + Radix UI
-- **Estado:** Zustand (com persistência)
+- **Estado:** Zustand (com persistência) + React Query
 - **Roteamento:** React Router DOM v6
 - **Autenticação:** Keycloak JS Adapter
 - **HTTP:** Axios com interceptors
+
+### Gerenciamento de Dados
+
+- **React Query:** Para queries e mutations
+- **Zustand:** Para estado global (user, profile, sign)
+- **Cache:** 5 minutos para profiles, 1 hora para horóscopos
 
 ## Estrutura
 
